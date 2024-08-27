@@ -27,6 +27,9 @@ export class UserService {
   async getUserById(userId: number) {
     return this.prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        RefreshToken: true,
+      },
     });
   }
 }

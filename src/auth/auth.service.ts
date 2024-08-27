@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -58,13 +58,42 @@ export class AuthService {
     refreshToken: string,
   ): Promise<boolean> {
     const user = await this.userService.getUserById(userId);
-    if (!user.refreshToken[]) return false;
+    if (!user.RefreshToken) return false;
 
-    // refresh_token 비교
-    const result = await bcrypt.compare(refreshToken, user.refreshToken);
+    const result = await bcrypt.compare(refreshToken, user.RefreshToken);
     if (!result) return false;
 
     return true;
   }
   //refresh 토큰으로 access 토큰 재발급 받는 로직
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+      });
+
+      const user = await this.userService.getUserById(payload.userId);
+      // 유저 정보가 없거나 refresh토큰이 다를 때 에러처리
+      if (
+        !user ||
+        !(await this.compareUserRefreshToken(user.id, refreshToken))
+      ) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const newAccessToken = this.jwtService.sign(
+        { userId: user.id, username: user.username },
+        {
+          secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+          expiresIn: '15m',
+        },
+      );
+
+      return { accessToken: newAccessToken };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }
