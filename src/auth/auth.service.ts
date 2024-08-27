@@ -50,6 +50,9 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
   //로그아웃
-  //access토큰 재발급
-  //인증 미들웨어
+  async logout(refreshToken: string) {
+    await this.prisma.refreshToken.delete({
+      where: { token: refreshToken },
+    });
+  }
 }
