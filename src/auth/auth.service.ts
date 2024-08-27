@@ -16,8 +16,10 @@ export class AuthService {
   prisma = new PrismaClient();
   //로그인
   async login(loginDto: LoginDto) {
-    const { userId, password } = loginDto;
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const { userName, password } = loginDto;
+    const user = await this.prisma.user.findUnique({
+      where: { username: userName },
+    });
     //비밀번호 db에서 꺼내와서 비교
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new Error('비밀번호가 다릅니다.');
