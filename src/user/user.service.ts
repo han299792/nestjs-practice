@@ -27,7 +27,7 @@ export class UserService {
   //  id로 유저 정보 받아오기
   async getUserById(userId: number) {
     return this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: Number(userId) },
       include: {
         refreshToken: true,
       },
