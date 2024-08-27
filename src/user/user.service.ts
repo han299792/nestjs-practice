@@ -19,11 +19,12 @@ export class UserService {
     });
     return user;
   }
+  //모든 user 정보 리스트 가져오기
   async getUsers(): Promise<User[]> {
     const users = await this.prisma.user.findMany();
     return users;
   }
-
+  //  id로 유저 정보 받아오기
   async getUserById(userId: number) {
     return this.prisma.user.findUnique({
       where: { id: userId },
