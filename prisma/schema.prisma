@@ -18,11 +18,9 @@ model User {
   email      String    @unique
   password   String
   createdAt  DateTime  @default(now())
+
   posts      Post[]
-
-  AccessToken AccessToken[]
-
-  RefreshToken RefreshToken[]
+  refreshToken RefreshToken[]
 }
 
 model Post {
@@ -33,14 +31,6 @@ model Post {
   tags       String[]
   authorId   Int
   author     User      @relation(fields: [authorId], references: [id])
-}
-model AccessToken {
-  id            Int       @id @default(autoincrement())
-  token         String    @unique
-  expiresAt     DateTime  
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id])
-  createdAt     DateTime  @default(now())
 }
 
 model RefreshToken {

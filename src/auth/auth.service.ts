@@ -2,16 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto } from 'src/dto/auth.dto';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly prismaService: PrismaService,
+    private readonly userService: UserService,
   ) {}
   prisma = new PrismaClient();
   //로그인
@@ -50,9 +48,24 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
   //로그아웃
-  async logout(refreshToken: string) {
-    await this.prisma.refreshToken.delete({
-      where: { token: refreshToken },
-    });
+  async logout(userId: number) {
+    await this.prisma.refreshToken.delete({ where: { id: userId } });
+    await this.prisma.accessToken.delete({ where: { id: userId } });
   }
+  //저장된 refresh 토큰과 비교하는 로직
+  async compareUserRefreshToken(
+    userId: number,
+    refreshToken: string,
+  ): Promise<boolean> {
+    const user = await this.userService.getUserById(userId);
+    // 사용자에게 저장된 refresh token이 없으면 false 반환
+    if (!user.RefreshToken) return false;
+
+    // refresh_token 비교
+    const result = await bcrypt.compare(refreshToken, user.refreshToken);
+    if (!result) return false;
+
+    return true;
+  }
+  //refresh 토큰으로 access 토큰 재발급 받는 로직
 }
