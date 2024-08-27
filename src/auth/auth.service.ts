@@ -4,12 +4,14 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from 'src/dto/auth.dto';
 import { UserService } from 'src/user/user.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly prismaService: PrismaService,
   ) {}
   prisma = new PrismaClient();
   //로그인
@@ -30,7 +32,7 @@ export class AuthService {
       expiresIn: '7d',
     });
     //DB에 저장
-    await this.prisma.accessToken.create({
+    await this.prismaService.accessToken.create({
       data: {
         token: accessToken,
         expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
@@ -50,7 +52,6 @@ export class AuthService {
   //로그아웃
   async logout(userId: number) {
     await this.prisma.refreshToken.delete({ where: { id: userId } });
-    await this.prisma.accessToken.delete({ where: { id: userId } });
   }
   //저장된 refresh 토큰과 비교하는 로직
   async compareUserRefreshToken(
@@ -58,9 +59,9 @@ export class AuthService {
     refreshToken: string,
   ): Promise<boolean> {
     const user = await this.userService.getUserById(userId);
-    if (!user.RefreshToken) return false;
+    if (!user.refreshToken) return false;
 
-    const result = await bcrypt.compare(refreshToken, user.RefreshToken);
+    const result = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!result) return false;
 
     return true;
