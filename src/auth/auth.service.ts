@@ -58,8 +58,7 @@ export class AuthService {
     refreshToken: string,
   ): Promise<boolean> {
     const user = await this.userService.getUserById(userId);
-    // 사용자에게 저장된 refresh token이 없으면 false 반환
-    if (!user.RefreshToken) return false;
+    if (!user.refreshToken[]) return false;
 
     // refresh_token 비교
     const result = await bcrypt.compare(refreshToken, user.refreshToken);
