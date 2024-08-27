@@ -14,7 +14,9 @@ import { PostService } from './post.service';
 import { JwtAccessTokenGuard } from 'src/auth/guard/accessToken.guard';
 import { CreatePostDto, UpdatePostDto } from 'src/dto/post.dto';
 import { CustomRequest } from 'src/types/auth.type';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('post')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}

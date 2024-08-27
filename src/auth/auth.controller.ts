@@ -13,11 +13,14 @@ import { Response } from 'express';
 import { CustomRequest } from 'src/types/auth.type';
 import { JwtRefreshTokenGuard } from './guard/refreshToken.guard';
 import { JwtAccessTokenGuard } from './guard/accessToken.guard';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiBody({ type: LoginDto })
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     const { accessToken, refreshToken } =
