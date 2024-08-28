@@ -13,6 +13,9 @@ import { PostService } from './post/post.service';
 import { AuthService } from './auth/auth.service';
 import { PrismaService } from './prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtAccessTokenGuard } from './auth/guard/accessToken.guard';
+import { JwtRefreshTokenGuard } from './auth/guard/refreshToken.guard';
 
 @Module({
   imports: [
@@ -24,8 +27,17 @@ import { JwtModule } from '@nestjs/jwt';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '5m' },
     }),
+    PassportModule.register({}),
   ],
   controllers: [AppController, UserController, AuthController, PostController],
-  providers: [AppService, UserService, PostService, AuthService, PrismaService],
+  providers: [
+    AppService,
+    UserService,
+    PostService,
+    AuthService,
+    PrismaService,
+    JwtAccessTokenGuard,
+    JwtRefreshTokenGuard,
+  ],
 })
 export class AppModule {}

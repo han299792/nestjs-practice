@@ -19,3 +19,8 @@ export interface CustomRequest extends Request {
     username: string;
   };
 }
+export interface UserPublicDto {
+  id: number;
+  username: string;
+  email: string;
+}

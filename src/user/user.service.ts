@@ -10,14 +10,14 @@ export class UserService {
 
   async registerUser(username: string, email: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         username,
         email,
         password: hashedPassword,
       },
     });
-    return user;
+    return '회원가입 성공';
   }
   //모든 user 정보 리스트 가져오기
   async getUsers(): Promise<User[]> {

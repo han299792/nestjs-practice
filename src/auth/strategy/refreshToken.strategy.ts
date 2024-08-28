@@ -14,16 +14,17 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request) => {
-          return request?.cookies?.refresh_token;
+          return request.cookies?.refresh_token;
         },
       ]),
       secretOrKey: process.env.JWT_REFRESH_TOKEN_SECRET,
       ignoreExpiration: false,
-      passReqToCallback: false,
+      passReqToCallback: true,
     });
   }
 
   async validate(req: Request, payload: RefreshTokenPayload) {
+    console.log('1');
     const refreshToken = req?.cookies?.refresh_token;
     if (!refreshToken) {
       throw new UnauthorizedException('refresh token is undefined');
@@ -36,6 +37,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     );
     // 결과가 틀렸다면 예외 발생
     if (!result) {
+      console.log('1');
       throw new UnauthorizedException('refresh token is wrong');
     }
     return { ...payload, refreshToken };

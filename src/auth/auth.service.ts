@@ -24,25 +24,27 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new Error('비밀번호가 다릅니다.');
     }
-    const payload: { userId: number } = { userId: user.id }; // 타입 추론이 가능하게 바꿀 것
     //토큰 발급
+    const payload = { userId: Number(user.id) };
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: '15m',
     });
+    //configService 를 사용
     const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
       expiresIn: '7d',
     });
     //DB에 저장
-    await this.prismaService.accessToken.create({
-      data: {
-        token: accessToken,
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+    await this.prismaService.refreshToken.upsert({
+      where: {
         userId: user.id,
       },
-    });
-    await this.prisma.refreshToken.create({
-      data: {
+      update: {
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+      create: {
         token: refreshToken,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         userId: user.id,
@@ -63,7 +65,13 @@ export class AuthService {
     const user = await this.userService.getUserById(userId);
     if (!user.refreshToken) return false;
 
-    const result = await bcrypt.compare(refreshToken, user.refreshToken);
+    console.log(refreshToken);
+    console.log(user);
+
+    const result = await bcrypt.compare(
+      refreshToken,
+      user.refreshToken['token'],
+    );
     if (!result) return false;
 
     return true;
@@ -83,6 +91,7 @@ export class AuthService {
         !user ||
         !(await this.compareUserRefreshToken(user.id, refreshToken))
       ) {
+        console.log('4');
         throw new UnauthorizedException('Invalid refresh token');
       }
 
