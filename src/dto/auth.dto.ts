@@ -4,7 +4,7 @@ import { IsInt, IsString } from 'class-validator';
 export class LoginDto {
   @ApiProperty({ description: '사용자 id' })
   @IsInt()
-  userName: string;
+  username: string;
   @ApiProperty({ description: '사용자 비밀번호' })
   @IsString()
   password: string;

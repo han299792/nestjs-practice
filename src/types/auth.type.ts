@@ -1,4 +1,3 @@
-import { Request } from 'express';
 export interface RefreshTokenPayload {
   userId: number;
   username: string;
@@ -13,14 +12,15 @@ export interface AccessTokenPayload {
   createdAt?: number;
   expiredAt?: number;
 }
-export interface CustomRequest extends Request {
-  user?: {
-    userId: number;
-    username: string;
-  };
-}
+
 export interface UserPublicDto {
   id: number;
   username: string;
   email: string;
+}
+export interface CustomRequest extends Request {
+  user?: {
+    userId: number;
+    name: string;
+  };
 }

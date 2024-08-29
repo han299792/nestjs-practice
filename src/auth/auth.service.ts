@@ -16,9 +16,9 @@ export class AuthService {
   prisma = new PrismaClient();
   //로그인
   async login(loginDto: LoginDto) {
-    const { userName, password } = loginDto;
+    const { username, password } = loginDto;
     const user = await this.prisma.user.findUnique({
-      where: { username: userName },
+      where: { username: username },
     });
     //비밀번호 db에서 꺼내와서 비교
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -65,16 +65,11 @@ export class AuthService {
     const user = await this.userService.getUserById(userId);
     if (!user.refreshToken) return false;
 
-    console.log(refreshToken);
-    console.log(user);
-
-    const result = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken['token'],
-    );
-    if (!result) return false;
-
-    return true;
+    if (refreshToken === user.refreshToken[0].token) {
+      return true;
+    } else {
+      return false;
+    }
   }
   //refresh 토큰으로 access 토큰 재발급 받는 로직
   async refreshAccessToken(
@@ -91,7 +86,6 @@ export class AuthService {
         !user ||
         !(await this.compareUserRefreshToken(user.id, refreshToken))
       ) {
-        console.log('4');
         throw new UnauthorizedException('Invalid refresh token');
       }
 

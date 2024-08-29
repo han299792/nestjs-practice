@@ -10,10 +10,9 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from 'src/dto/auth.dto';
 import { Request, Response } from 'express';
-import { CustomRequest } from 'src/types/auth.type';
 import { JwtRefreshTokenGuard } from './guard/refreshToken.guard';
-import { JwtAccessTokenGuard } from './guard/accessToken.guard';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
+import * as jwt from 'jsonwebtoken';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -32,15 +31,22 @@ export class AuthController {
 
     return res.json({ message: '로그인 성공' });
   }
+
   @UseGuards(JwtRefreshTokenGuard)
   @Post('logout')
   async logout(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies['refresh_token'];
-    const userId = refreshToken.payload.userId;
 
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token found');
     }
+    let payload;
+    try {
+      payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const userId = payload.userId;
 
     await this.authService.logout(userId);
 
@@ -50,9 +56,8 @@ export class AuthController {
   }
 
   @UseGuards(JwtRefreshTokenGuard)
-  @UseGuards(JwtAccessTokenGuard)
   @Post('refresh-token')
-  async refreshToken(@Req() req: CustomRequest, @Res() res: Response) {
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies['refresh_token'];
 
     if (!refreshToken) {

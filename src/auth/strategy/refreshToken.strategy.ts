@@ -24,7 +24,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(req: Request, payload: RefreshTokenPayload) {
-    console.log('1');
     const refreshToken = req?.cookies?.refresh_token;
     if (!refreshToken) {
       throw new UnauthorizedException('refresh token is undefined');
@@ -37,7 +36,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     );
     // 결과가 틀렸다면 예외 발생
     if (!result) {
-      console.log('1');
       throw new UnauthorizedException('refresh token is wrong');
     }
     return { ...payload, refreshToken };
