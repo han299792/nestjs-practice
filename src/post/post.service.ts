@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto, UpdatePostDto } from 'src/dto/post.dto';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class PostService {
@@ -85,5 +86,29 @@ export class PostService {
     return this.prisma.post.delete({
       where: { id: postId },
     });
+  }
+  async extractUserIdFromToken(req: Request): Promise<number> {
+    try {
+      const authHeader = req.headers['authorization'];
+
+      if (!authHeader) {
+        return null;
+      }
+
+      const token = authHeader.split(' ')[1];
+
+      if (!token) {
+        return null;
+      }
+
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_ACCESS_TOKEN_SECRET,
+      ) as { userId: number };
+
+      return decoded.userId;
+    } catch (error) {
+      return null;
+    }
   }
 }

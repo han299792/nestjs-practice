@@ -10,7 +10,7 @@ import { PostModule } from './post/post.module';
 import { AuthController } from './auth/auth.controller';
 import { PostController } from './post/post.controller';
 import { PostService } from './post/post.service';
-import { AuthService } from './auth/auth.service';
+import { AuthService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';

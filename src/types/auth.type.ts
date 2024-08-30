@@ -18,9 +18,3 @@ export interface UserPublicDto {
   username: string;
   email: string;
 }
-export interface CustomRequest extends Request {
-  user?: {
-    userId: number;
-    name: string;
-  };
-}

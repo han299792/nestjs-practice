@@ -8,7 +8,6 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtAccessTokenStrategy } from 'src/auth/strategy/accessToken.strategy';
 import { UserModule } from 'src/user/user.module';
-
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'access_token' }),

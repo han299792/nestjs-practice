@@ -7,7 +7,7 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AuthService } from 'src/app.service';
 import { LoginDto } from 'src/dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtRefreshTokenGuard } from './guard/refreshToken.guard';
@@ -22,14 +22,15 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
-    const { refreshToken } = await this.authService.login(loginDto);
+    const { accessToken, refreshToken } =
+      await this.authService.login(loginDto);
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: false,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
 
-    return res.json({ message: '로그인 성공' });
+    return res.json({ message: '로그인 성공', accessToken });
   }
 
   @UseGuards(JwtRefreshTokenGuard)

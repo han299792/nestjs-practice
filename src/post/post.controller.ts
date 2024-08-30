@@ -14,8 +14,6 @@ import { PostService } from './post.service';
 import { JwtAccessTokenGuard } from 'src/auth/guard/accessToken.guard';
 import { CreatePostDto, UpdatePostDto } from 'src/dto/post.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { CustomRequest } from 'src/types/auth.type';
-
 @ApiTags('post')
 @Controller('post')
 export class PostController {
@@ -23,11 +21,8 @@ export class PostController {
 
   @UseGuards(JwtAccessTokenGuard)
   @Post('/')
-  async createPost(
-    @Req() req: CustomRequest,
-    @Body() createPostDto: CreatePostDto,
-  ) {
-    const userId = req.user.userId;
+  async createPost(@Req() req: Request, @Body() createPostDto: CreatePostDto) {
+    const userId = await this.postService.extractUserIdFromToken(req);
     return this.postService.createPost(userId, createPostDto);
   }
 
@@ -35,15 +30,15 @@ export class PostController {
   async getPosts() {
     return this.postService.getPosts();
   }
-
-  @Get(':id')
-  async getPostById(@Param('id') id: number) {
-    return this.postService.getPostById(id);
-  }
-
   @Get('search')
   async searchPosts(@Query('keyword') keyword: string) {
     return this.postService.searchPosts(keyword);
+  }
+
+  @Get(':id')
+  async getPostById(@Param('id') id: string) {
+    const numberedId = Number(id);
+    return this.postService.getPostById(numberedId);
   }
 
   @Get('tag/:tag')
@@ -54,17 +49,19 @@ export class PostController {
   @UseGuards(JwtAccessTokenGuard)
   @Patch(':id')
   async updatePost(
-    @Req() req: CustomRequest,
-    @Param('id') id: number,
+    @Req() req: Request,
+    @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    const userId = req.user.userId;
-    return this.postService.updatePost(userId, id, updatePostDto);
+    const userId = await this.postService.extractUserIdFromToken(req);
+    const numberedId = Number(id);
+    return this.postService.updatePost(userId, numberedId, updatePostDto);
   }
   @UseGuards(JwtAccessTokenGuard)
   @Delete(':id')
-  async deletePost(@Req() req: CustomRequest, @Param('id') id: number) {
-    const userId = req.user.userId;
-    return this.postService.deletePost(userId, id);
+  async deletePost(@Req() req: Request, @Param('id') id: number) {
+    const userId = await this.postService.extractUserIdFromToken(req);
+    const numberedId = Number(id);
+    return this.postService.deletePost(userId, numberedId);
   }
 }
