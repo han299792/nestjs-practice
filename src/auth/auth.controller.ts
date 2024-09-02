@@ -13,11 +13,15 @@ import { JwtRefreshTokenGuard } from './guard/refreshToken.guard';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import * as jwt from 'jsonwebtoken';
 import { AuthService } from './auth.service';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @ApiBody({ type: LoginDto })
   @Post('login')
@@ -43,7 +47,8 @@ export class AuthController {
     }
     let payload;
     try {
-      payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+      const secret = this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET');
+      payload = jwt.verify(refreshToken, secret);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }

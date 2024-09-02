@@ -82,7 +82,7 @@ export class AuthService {
   ): Promise<{ accessToken: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+        secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
       });
 
       const user = await this.userService.getUserById(payload.userId);

@@ -6,10 +6,14 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto, UpdatePostDto } from 'src/dto/post.dto';
 import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async createPost(userId: number, createPostDto: CreatePostDto) {
     const { title, content, tags } = createPostDto;
@@ -103,7 +107,7 @@ export class PostService {
 
       const decoded = jwt.verify(
         token,
-        process.env.JWT_ACCESS_TOKEN_SECRET,
+        this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
       ) as { userId: number };
 
       return decoded.userId;
