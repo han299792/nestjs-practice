@@ -7,12 +7,12 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthService } from 'src/app.service';
 import { LoginDto } from 'src/dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtRefreshTokenGuard } from './guard/refreshToken.guard';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import * as jwt from 'jsonwebtoken';
+import { AuthService } from './auth.service';
 
 @ApiTags('auth')
 @Controller('auth')

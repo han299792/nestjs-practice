@@ -9,15 +9,22 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtAccessTokenStrategy } from './strategy/accessToken.strategy';
 import { JwtRefreshTokenStrategy } from './strategy/refreshToken.strategy';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     UserModule,
     PassportModule.register({ defaultStrategy: 'access_token' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '5m' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
+        signOptions: { expiresIn: '15m' },
+      }),
     }),
     PrismaModule,
     ConfigModule,
@@ -29,6 +36,7 @@ import { ConfigModule } from '@nestjs/config';
     JwtService,
     JwtAccessTokenStrategy,
     JwtRefreshTokenStrategy,
+    ConfigService,
   ],
   controllers: [AuthController],
 })

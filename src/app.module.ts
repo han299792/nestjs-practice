@@ -10,12 +10,13 @@ import { PostModule } from './post/post.module';
 import { AuthController } from './auth/auth.controller';
 import { PostController } from './post/post.controller';
 import { PostService } from './post/post.service';
-import { AuthService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtAccessTokenGuard } from './auth/guard/accessToken.guard';
 import { JwtRefreshTokenGuard } from './auth/guard/refreshToken.guard';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { JwtRefreshTokenGuard } from './auth/guard/refreshToken.guard';
     UserModule,
     PrismaModule,
     PostModule,
+    ConfigModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '5m' },
@@ -35,6 +37,7 @@ import { JwtRefreshTokenGuard } from './auth/guard/refreshToken.guard';
     UserService,
     PostService,
     AuthService,
+    ConfigService,
     PrismaService,
     JwtAccessTokenGuard,
     JwtRefreshTokenGuard,

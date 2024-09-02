@@ -5,12 +5,14 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from 'src/dto/auth.dto';
 import { UserService } from 'src/user/user.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
   ) {}
   prisma = new PrismaClient();
   //로그인
@@ -25,14 +27,18 @@ export class AuthService {
     }
     //토큰 발급
     const payload = { userId: Number(user.id) };
-    const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      expiresIn: '15m',
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
+      expiresIn: parseInt(
+        this.configService.get<string>('JWT_ACCESS_TOKEN_EXP'),
+      ),
     });
     //configService 를 사용
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
-      expiresIn: '7d',
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
+      expiresIn: parseInt(
+        this.configService.get<string>('JWT_REFRESH_TOKEN_EXP'),
+      ),
     });
     //DB에 저장
     await this.prismaService.refreshToken.upsert({
@@ -88,11 +94,13 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const newAccessToken = this.jwtService.sign(
+      const newAccessToken = await this.jwtService.signAsync(
         { userId: user.id, username: user.username },
         {
-          secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-          expiresIn: '15m',
+          secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
+          expiresIn: parseInt(
+            this.configService.get<string>('JWT_ACCESS_TOKEN_EXP'),
+          ),
         },
       );
 
