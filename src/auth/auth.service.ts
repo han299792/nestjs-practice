@@ -1,32 +1,28 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from 'src/dto/auth.dto';
 import { UserService } from 'src/user/user.service';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { AuthRepository } from './auth.repository';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
-    private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
+    private readonly authRepository: AuthRepository,
   ) {}
-  prisma = new PrismaClient();
   //로그인
   async login(loginDto: LoginDto) {
     const { username, password } = loginDto;
-    const user = await this.prisma.user.findUnique({
-      where: { username: username },
-    });
+    const user = this.authRepository.findUserByName(username);
     //비밀번호 db에서 꺼내와서 비교
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, (await user).password))) {
       throw new Error('비밀번호가 다릅니다.');
     }
     //토큰 발급
-    const payload = { userId: Number(user.id) };
+    const payload = { userId: (await user).id };
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_EXP'),
@@ -37,27 +33,14 @@ export class AuthService {
       expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_EXP'),
     });
     //DB에 저장
-    await this.prismaService.refreshToken.upsert({
-      where: {
-        userId: user.id,
-      },
-      update: {
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-      create: {
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        userId: user.id,
-      },
-    });
-
+    await this.authRepository.upsertRefreshToken((await user).id, refreshToken);
     return { accessToken, refreshToken };
   }
   //로그아웃
   async logout(userId: number) {
-    await this.prisma.refreshToken.delete({ where: { userId } });
+    await this.authRepository.deleteRefreshToken(userId);
   }
+
   //저장된 refresh 토큰과 비교하는 로직
   async compareUserRefreshToken(
     userId: number,

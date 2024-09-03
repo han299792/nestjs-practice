@@ -3,41 +3,28 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto, UpdatePostDto } from 'src/dto/post.dto';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
+import { PostRepository } from './post.repository';
 
 @Injectable()
 export class PostService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly postRepository: PostRepository,
   ) {}
 
   async createPost(userId: number, createPostDto: CreatePostDto) {
-    const { title, content, tags } = createPostDto;
-    return this.prisma.post.create({
-      data: {
-        title,
-        content,
-        tags,
-        author: { connect: { id: userId } },
-      },
-    });
+    return this.postRepository.createPost(userId, createPostDto);
   }
 
   async getPosts() {
-    return this.prisma.post.findMany({
-      include: { author: true },
-    });
+    return this.postRepository.getPosts();
   }
 
   async getPostById(id: number) {
-    const post = await this.prisma.post.findUnique({
-      where: { id },
-      include: { author: true },
-    });
+    const post = await this.postRepository.getPostById(id);
     if (!post) {
       throw new NotFoundException('게시물이 존재하지 않습니다.');
     }
@@ -45,24 +32,11 @@ export class PostService {
   }
 
   async searchPosts(keyword: string) {
-    return this.prisma.post.findMany({
-      where: {
-        OR: [
-          { title: { contains: keyword } },
-          { content: { contains: keyword } },
-        ],
-      },
-      include: { author: true },
-    });
+    return this.postRepository.searchPosts(keyword);
   }
 
   async getPostsByTag(tag: string) {
-    return this.prisma.post.findMany({
-      where: {
-        tags: { has: tag },
-      },
-      include: { author: true },
-    });
+    return this.postRepository.getPostsByTag(tag);
   }
 
   async updatePost(
@@ -74,11 +48,7 @@ export class PostService {
     if (post.authorId !== userId) {
       throw new ForbiddenException('접근권한이 없습니다.');
     }
-
-    return this.prisma.post.update({
-      where: { id: postId },
-      data: updatePostDto,
-    });
+    return this.postRepository.updatePost(postId, updatePostDto);
   }
 
   async deletePost(userId: number, postId: number) {
@@ -86,12 +56,10 @@ export class PostService {
     if (post.authorId !== userId) {
       throw new ForbiddenException('접근권한이 없습니다.');
     }
-
-    return this.prisma.post.delete({
-      where: { id: postId },
-    });
+    return this.postRepository.deletePost(postId);
   }
-  async extractUserIdFromToken(req: Request): Promise<number> {
+
+  async extractUserIdFromToken(req: Request): Promise<number | null> {
     try {
       const authHeader = req.headers['authorization'];
 

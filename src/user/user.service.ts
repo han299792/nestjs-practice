@@ -1,36 +1,24 @@
+// user.service.ts
 import { Injectable } from '@nestjs/common';
-import { PrismaClient, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { UserRepository } from './user.repository';
+import { User } from '@prisma/client';
 
-const prisma = new PrismaClient();
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async registerUser(username: string, email: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-      },
-    });
+    await this.userRepository.createUser(username, email, hashedPassword);
     return '회원가입 성공';
   }
-  //모든 user 정보 리스트 가져오기
+
   async getUsers(): Promise<User[]> {
-    const users = await this.prisma.user.findMany();
-    return users;
+    return this.userRepository.findAllUsers();
   }
-  //  id로 유저 정보 받아오기
-  async getUserById(userId: number) {
-    return this.prisma.user.findUnique({
-      where: { id: Number(userId) },
-      include: {
-        refreshToken: true,
-      },
-    });
+
+  async getUserById(userId: number): Promise<User | null> {
+    return this.userRepository.findUserById(userId);
   }
 }
