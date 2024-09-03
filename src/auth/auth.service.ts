@@ -29,16 +29,12 @@ export class AuthService {
     const payload = { userId: Number(user.id) };
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
-      expiresIn: parseInt(
-        this.configService.get<string>('JWT_ACCESS_TOKEN_EXP'),
-      ),
+      expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_EXP'),
     });
     //configService 를 사용
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
-      expiresIn: parseInt(
-        this.configService.get<string>('JWT_REFRESH_TOKEN_EXP'),
-      ),
+      expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_EXP'),
     });
     //DB에 저장
     await this.prismaService.refreshToken.upsert({
@@ -60,7 +56,7 @@ export class AuthService {
   }
   //로그아웃
   async logout(userId: number) {
-    await this.prisma.refreshToken.delete({ where: { id: userId } });
+    await this.prisma.refreshToken.delete({ where: { userId } });
   }
   //저장된 refresh 토큰과 비교하는 로직
   async compareUserRefreshToken(

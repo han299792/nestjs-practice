@@ -11,9 +11,9 @@ import { LoginDto } from 'src/dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtRefreshTokenGuard } from './guard/refreshToken.guard';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import * as jwt from 'jsonwebtoken';
 import { AuthService } from './auth.service';
 import { ConfigService } from '@nestjs/config';
+import { GetUser } from 'src/user/decorator/get-user.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -39,21 +39,7 @@ export class AuthController {
 
   @UseGuards(JwtRefreshTokenGuard)
   @Post('logout')
-  async logout(@Req() req: Request, @Res() res: Response) {
-    const refreshToken = req.cookies['refresh_token'];
-
-    if (!refreshToken) {
-      throw new UnauthorizedException('No refresh token found');
-    }
-    let payload;
-    try {
-      const secret = this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET');
-      payload = jwt.verify(refreshToken, secret);
-    } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-    const userId = payload.userId;
-
+  async logout(@GetUser() userId: number, @Res() res: Response) {
     await this.authService.logout(userId);
 
     res.clearCookie('refresh_token');

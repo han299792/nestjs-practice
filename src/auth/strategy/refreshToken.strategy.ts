@@ -2,9 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { RefreshTokenPayload } from 'src/types/auth.type';
-import { AuthService } from 'src/app.service';
 import { ConfigService } from '@nestjs/config';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class JwtRefreshTokenStrategy extends PassportStrategy(
@@ -27,21 +26,25 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, payload: RefreshTokenPayload) {
+  async validate(req: Request, payload: { userId: number }) {
     const refreshToken = req?.cookies?.refresh_token;
+
+    const userId = payload.userId;
+
     if (!refreshToken) {
       throw new UnauthorizedException('refresh token is undefined');
     }
 
     // 저장된 refresh token과 비교
     const result = await this.authService.compareUserRefreshToken(
-      payload.userId,
+      userId,
       refreshToken,
     );
     // 결과가 틀렸다면 예외 발생
     if (!result) {
       throw new UnauthorizedException('refresh token is wrong');
     }
-    return { ...payload, refreshToken };
+
+    return userId;
   }
 }
